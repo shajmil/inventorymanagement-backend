@@ -174,12 +174,37 @@ const deleteProduct = asyncHandler(async (req, res) => {
 });
 
 
+const checkProductByName = asyncHandler(async (req, res) => {
+    const { name } = req.params;
+  
+    try {
+      const product = await Product.findOne({ name: { $regex: new RegExp(`^${name}$`, 'i') } });
+      res.status(200).json({ exists: !!product });
+    } catch (error) {
+      res.status(400).json({ message: error.message });
+    }
+  });
+
+
+  const checkProductBySKU = asyncHandler(async (req, res) => {
+    const { sku } = req.params;
+  
+    try {
+      const product = await Product.findOne({ sku: { $regex: new RegExp(`^${sku}$`, 'i') } });
+      const exists = !!product;
+      res.status(200).json({ exists });
+    } catch (error) {
+      res.status(400).json({ message: error.message });
+    }
+  });
+
 
 module.exports = {
     createProduct,
     getAllProduct,
     updateProduct,
     getProduct,
-    deleteProduct
-
+    deleteProduct,
+    checkProductByName,
+    checkProductBySKU
 }
