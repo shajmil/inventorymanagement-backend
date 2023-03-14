@@ -8,8 +8,7 @@ const categorySchema = mongoose.Schema({
     },
     name: {
         type: String,
-        required: [true, 'Please add an Name'],
-        unique: true,
+        required: true,
         
     }
     

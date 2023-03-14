@@ -4,41 +4,38 @@ const Category = require('../models/categoryModel')
 
 // access contact
 const getCategory = asyncHandler(async (req, res) => {
-
     try {
         const user = await User.findById(req.user.id)
-
         if (!user) {
             res.status(401)
             throw new Error('User not found')
         }
-        const category = await Category.find({ user })
-        res.status(200).json(category)
+        const categories = await Category.find({ user: req.user.id });
 
-
+        res.status(200).json(categories);
     } catch (error) {
-        res.status(400)
-        throw new Error(error)
-
+        res.status(400);
+        throw new Error(error);
     }
-})
-
+});
 
 const createCategory = asyncHandler(async (req, res) => {
-
-
     try {
-
         const { name } = req.body;
-        const existingCategory = await Category.findOne({ name });
         const user = await User.findById(req.user.id)
         if (!user) {
             res.status(401)
             throw new Error('User not found')
         }
+
+        const existingCategory = await Category.findOne({
+            name: { $regex: new RegExp(`^${name}$`, 'i') },
+            user: req.user.id
+        });
+
         if (existingCategory) {
-            res.status(401)
-            throw new Error('A category with this name already exists')
+            res.status(400).json({ message: 'A category with this name already exists for this user' });
+            return;
         }
 
         const newCategory = new Category({
@@ -47,12 +44,11 @@ const createCategory = asyncHandler(async (req, res) => {
         });
         await newCategory.save();
 
-        res.json({ category: newCategory });
+        res.status(201).json({ category: newCategory });
     } catch (error) {
-        res.status(400)
-        throw new Error(error)
+        res.status(400).json({ message: error.message });
     }
-})
+});
 
 
 
