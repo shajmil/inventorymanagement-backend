@@ -7,29 +7,29 @@ const createProduct = asyncHandler(async (req, res) => {
     const { name, SKU, description, salePrice, purchasePrice, quantity, enabled, category, enableBill } = req.body;
 
     try {
-        
-
         const user = await User.findById(req.user.id)
         if (!user) {
             res.status(401)
             throw new Error('User not found')
         }
-        const existingSKU = await Product.findOne({ SKU });
+
+        const existingSKU = await Product.findOne({ SKU: { $regex: new RegExp(`^${SKU}$`, 'i') }, user: req.user.id });
         if (existingSKU) {
             res.status(401)
             throw new Error('A product with this SKU already exists')
         }
 
-        const existingProduct = await Product.findOne({ name });
+        const existingProduct = await Product.findOne({ name: { $regex: new RegExp(`^${name}$`, 'i') }, user: req.user.id });
         if (existingProduct) {
             res.status(401)
             throw new Error('A product with this name already exists')
         }
 
-        const foundCategory = await Category.findOne({ name: category }).exec();
+        const foundCategory = await Category.findOne({ name: { $regex: new RegExp(`^${category}$`, 'i') }, user: req.user.id }).exec();
         if (!foundCategory) {
             return res.status(400).json({ message: 'Invalid category name' });
         }
+
         const newProduct = new Product({
             name,
             SKU,
@@ -43,15 +43,16 @@ const createProduct = asyncHandler(async (req, res) => {
             categoryName: foundCategory.name,
             user: req.user.id
         });
-        await newProduct.save();
 
+        await newProduct.save();
         res.json({ product: newProduct });
 
     } catch (error) {
         res.status(400)
         throw new Error(error)
     }
-})
+});
+
 
 const updateProduct = asyncHandler(async (req, res) => {
     const { id } = req.params;
@@ -97,7 +98,7 @@ const updateProduct = asyncHandler(async (req, res) => {
         limit
     } = req.query;
 
-    const query = {};
+    const query = { user: req.user.id };    
     if (name) query.name = { $regex: name, $options: 'i' };
     if (SKU) query.SKU = { $regex: SKU, $options: 'i' };
     if (categoryName) query.categoryName = { $regex: categoryName, $options: 'i' };
@@ -115,7 +116,6 @@ const updateProduct = asyncHandler(async (req, res) => {
 
     try {
         const user = await User.findById(req.user.id)
-
         if (!user) {
             res.status(401)
             throw new Error('User not found')
@@ -138,7 +138,7 @@ const updateProduct = asyncHandler(async (req, res) => {
 
 const getProduct = asyncHandler(async (req, res) => {
     try {
-        const product = await Product.findOne({ SKU: req.params.SKU });
+        const product = await Product.findOne({ SKU: req.params.SKU, user: req.user.id });
         if (!product) {
             res.status(404).json({ message: 'Product not found' });
             return;
@@ -151,18 +151,18 @@ const getProduct = asyncHandler(async (req, res) => {
 
 const deleteProduct = asyncHandler(async (req, res) => {
     try {
-        const user = await User.findById(req.user.id)
+        const user = await User.findById(req.user.id);
 
         if (!user) {
-            res.status(401)
-            throw new Error('User not found')
+            res.status(401);
+            throw new Error('User not found');
         }
 
-        const product = await Product.findOneAndDelete({ SKU: req.params.SKU });
+        const product = await Product.findOneAndDelete({ SKU: req.params.SKU, user: req.user.id });
 
         if (!product) {
-            res.status(404)
-            throw new Error('Product not found')
+            res.status(404);
+            throw new Error('Product not found');
         }
 
         res.status(200).json({
@@ -171,42 +171,43 @@ const deleteProduct = asyncHandler(async (req, res) => {
         });
 
     } catch (error) {
-        res.status(400)
-        throw new Error(error)
+        res.status(400);
+        throw new Error(error);
     }
 });
+
 
 
 const checkProductByName = asyncHandler(async (req, res) => {
     const { name } = req.params;
   
     try {
-      const product = await Product.findOne({ name: { $regex: new RegExp(`^${name}$`, 'i') } });
+      const product = await Product.findOne({ name: { $regex: new RegExp(`^${name}$`, 'i') }, user: req.user.id });
       res.status(200).json({ exists: !!product });
     } catch (error) {
       res.status(400).json({ message: error.message });
     }
-  });
+});
 
-  const checkProductBySKU = asyncHandler(async (req, res) => {
+const checkProductBySKU = asyncHandler(async (req, res) => {
     const { SKU } = req.params;
   
     try {
-      const product = await Product.findOne({ SKU: { $regex: new RegExp(`^${SKU}$`, 'i') } });
+      const product = await Product.findOne({ SKU: { $regex: new RegExp(`^${SKU}$`, 'i') }, user: req.user.id });
       res.status(200).json({ exists: !!product });
     } catch (error) {
       res.status(400).json({ message: error.message });
     }
-  });
+});
 
-  const searchProduct = asyncHandler(async (req, res) => {
+const searchProduct = asyncHandler(async (req, res) => {
     const {
       search,
       page,
       limit
     } = req.query;
   
-    const query = {};
+    const query = { user: req.user.id };
     if (search) query["$or"] = [
         { name: { $regex: search, $options: 'i' } },
         { SKU: { $regex: search, $options: 'i' } }
@@ -231,7 +232,7 @@ const checkProductByName = asyncHandler(async (req, res) => {
       res.status(400);
       throw new Error(error);
     }
-  });
+});
 
 module.exports = {
     createProduct,
