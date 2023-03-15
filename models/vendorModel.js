@@ -33,7 +33,22 @@ const vendorSchema = mongoose.Schema({
     enabled: {
         type: Boolean,
         default: true
-    }
+    },
+    bills: [
+        {
+          billDate: { type: Date },
+          billNumber: { type: String },
+          dueDate: { type: Date },
+          status: {
+            type: String,
+          },
+          billId: { type: mongoose.Schema.Types.ObjectId },
+          amount: { type: Number },
+        },
+      ],
+      paidAmount: { type: Number, default: 0 },
+      notPaidAmount: { type: Number, default: 0 },
+      overDueAmount: { type: Number, default: 0 },
 }, {
     timestamps: true,
 })

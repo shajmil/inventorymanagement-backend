@@ -83,6 +83,22 @@ const markBillAsReceived = async (req, res) => {
           bill.receivedDate = new Date();
           await bill.save();
 
+          // Update vendor bills array
+          const vendor = await Vendor.findById(bill.vendor);;
+          vendor.bills.push({
+              billDate: bill.billDate,
+              billNumber: bill.billNumber,
+              dueDate: bill.dueDate,
+              status: 'Received',
+              billId: bill._id,
+              amount: bill.totalAmount
+          });
+          vendor.notPaidAmount += bill.totalAmount;
+          if (bill.dueDate < new Date()) {
+            vendor.overDueAmount += bill.totalAmount;
+          }
+          await vendor.save();
+
           for (const item of bill.items) {
               const product = await Product.findById(item.product);
               if (!product) {
@@ -100,6 +116,8 @@ const markBillAsReceived = async (req, res) => {
       res.status(500).json({ message: 'Error marking bill as received' });
   }
 };
+
+
 
 
 // Add payment for a bill
@@ -126,12 +144,35 @@ const addPayment = async (req, res) => {
 
       await bill.save();
 
+      const vendor = await Vendor.findOne({ 'bills.billId': billId });
+      if (!vendor) {
+          return res.status(400).json({ message: 'Vendor not found' });
+      }
+
+      const billIndex = vendor.bills.findIndex(b => b.billId.toString() === billId);
+      if (billIndex < 0) {
+          return res.status(400).json({ message: 'Bill not found in vendor' });
+      }
+
+      if (bill.remainingAmount === 0) {
+          vendor.bills[billIndex].status = 'Paid';
+      } else {
+          vendor.bills[billIndex].status = 'Partial';
+      }
+
+      vendor.paidAmount += paymentAmount;
+      vendor.notPaidAmount -= paymentAmount;
+      vendor.overDueAmount -= paymentAmount;
+
+      await vendor.save();
+
       res.json({ message: 'Payment added successfully', bill });
   } catch (error) {
       console.error(error);
       res.status(500).json({ message: 'Error adding payment' });
   }
 };
+
 
 
 
