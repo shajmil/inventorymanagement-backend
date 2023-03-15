@@ -36,10 +36,18 @@ const billSchema = mongoose.Schema({
             total: {
                 type: Number,
                 required: true
-            }
+            },
+            taxAmount: {
+                type: Number,
+                required: true
+            },
         }
     ],
     totalAmount: {
+        type: Number,
+        required: true
+    },
+    totalTaxAmount : {
         type: Number,
         required: true
     },

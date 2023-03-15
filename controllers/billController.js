@@ -27,13 +27,14 @@ const createBill = async (req, res) => {
     }
 
     const totalAmount = items.reduce((total, item) => total + item.total, 0);
-
+    const totalTaxAmount = items.reduce((taxAmount, item) => taxAmount + item.taxAmount, 0);
     const bill = new Bill({
       vendor,
       billDate,
       billNumber,
       items,
       totalAmount,
+      totalTaxAmount,
       category,
       remainingAmount: totalAmount,
       paidAmount: 0,
