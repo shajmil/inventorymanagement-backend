@@ -4,6 +4,7 @@ const Product = require('../models/productModel')
 const Category = require('../models/categoryModel')
 
 const createProduct = asyncHandler(async (req, res) => {
+  console.log('hello1');
     const { name, SKU, description, salePrice, purchasePrice, quantity, enabled, category, enableBill } = req.body;
 
     try {
@@ -55,6 +56,7 @@ const createProduct = asyncHandler(async (req, res) => {
 
 
 const updateProduct = asyncHandler(async (req, res) => {
+  console.log('hello2');
     const { id } = req.params;
     const productData = req.body;
   
@@ -86,6 +88,7 @@ const updateProduct = asyncHandler(async (req, res) => {
 
 
   const getAllProduct = asyncHandler(async (req, res) => {
+    console.log('hello3');
     const {
         name,
         SKU,
@@ -136,20 +139,9 @@ const updateProduct = asyncHandler(async (req, res) => {
     }
 });
 
-const getProduct = asyncHandler(async (req, res) => {
-    try {
-        const product = await Product.findOne({ SKU: req.params.SKU, user: req.user.id });
-        if (!product) {
-            res.status(404).json({ message: 'Product not found' });
-            return;
-        }
-        res.status(200).json({ product });
-    } catch (error) {
-        res.status(400).json({ message: error.message });
-    }
-});
 
 const deleteProduct = asyncHandler(async (req, res) => {
+  console.log('hello5');
     try {
         const user = await User.findById(req.user.id);
 
@@ -179,6 +171,7 @@ const deleteProduct = asyncHandler(async (req, res) => {
 
 
 const checkProductByName = asyncHandler(async (req, res) => {
+  console.log('hello6');
     const { name } = req.params;
   
     try {
@@ -189,7 +182,10 @@ const checkProductByName = asyncHandler(async (req, res) => {
     }
 });
 
+
+
 const checkProductBySKU = asyncHandler(async (req, res) => {
+  console.log('hello7');
     const { SKU } = req.params;
   
     try {
@@ -201,6 +197,7 @@ const checkProductBySKU = asyncHandler(async (req, res) => {
 });
 
 const searchProduct = asyncHandler(async (req, res) => {
+  console.log('hello8');
     const {
       search,
       page,
@@ -234,13 +231,27 @@ const searchProduct = asyncHandler(async (req, res) => {
     }
 });
 
+const getAllProductsWithoutPagination = asyncHandler(async (req, res) => {
+  console.log('hello9');
+  const query = { user: req.user.id };  
+  
+  const products = await Product.find(query);
+
+  if (!products) {
+    res.status(404);
+    throw new Error('No products found');
+  }
+
+  res.json(products);
+});
+
 module.exports = {
     createProduct,
     getAllProduct,
     updateProduct,
-    getProduct,
     deleteProduct,
     checkProductByName,
     checkProductBySKU,
-    searchProduct
+    searchProduct,
+    getAllProductsWithoutPagination
 }
