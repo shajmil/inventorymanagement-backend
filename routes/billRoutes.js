@@ -3,14 +3,15 @@ const express = require('express')
 const router = express.Router()
 const { createBill,
     updateBill,
-    markBillAsReceived,
-    addPayment } = require('../controllers/billController')
+    markBillAsReceived,getBillById,
+    addPayment,updateBillByID } = require('../controllers/billController')
 
 const { protect } = require('../middleware/authMiddleware')
 
-router.post('/', createBill);
-router.put('/:billId', updateBill);
-router.put('/:billId/received', markBillAsReceived);
-router.put('/:billId/payment', addPayment);
-
+router.post('/',protect, createBill);
+router.put('/:billId',protect, updateBill);
+router.put('/:billId/received',protect, markBillAsReceived);
+router.put('/:billId/payment',protect, addPayment);
+router.get('/:id', protect, getBillById);
+router.put('/update/:billId',protect, updateBillByID);
 module.exports = router

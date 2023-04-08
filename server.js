@@ -20,6 +20,8 @@ app.use('/api/product', require('./routes/productRouting'))
 app.use('/api/vendor', require('./routes/vendorRoutes'))
 app.use('/api/billCategory', require('./routes/billCategoryRoutes'))
 app.use('/api/bill', require('./routes/billRoutes'))
+app.use('/api/account', require('./routes/accountRoutes'))
+
 
 
 

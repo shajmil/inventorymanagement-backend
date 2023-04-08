@@ -1,6 +1,11 @@
 const mongoose = require('mongoose');
 
 const billSchema = mongoose.Schema({
+    user: {
+        type: mongoose.Schema.Types.ObjectId,
+        required: true,
+        ref: 'User'
+    },
     vendor: {
         type: mongoose.Schema.Types.ObjectId,
         required: true,
@@ -68,16 +73,35 @@ const billSchema = mongoose.Schema({
     receivedDate:{
         type: Date
     },
+    payments: [
+        {
+            date: {
+                type: Date,
+                required: true
+            },
+            amount: {
+                type: Number,
+                required: true
+            },
+            method: {
+                type: String,
+                enum: ['Cash', 'Bank Transfer'],
+                required: true
+            },
+            description: {
+                type: String
+            }
+        }
+    ],
     remainingAmount: {
-        type: Number,
-        required: true
+        type: Number
     },
     paidAmount: {
-        type: Number,
-        required: true
+        type: Number
     }
 }, {
     timestamps: true
 });
+
 
 module.exports = mongoose.model('Bill', billSchema);
