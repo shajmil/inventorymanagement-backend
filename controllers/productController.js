@@ -136,18 +136,6 @@ const updateProduct = asyncHandler(async (req, res) => {
     }
 });
 
-const getProduct = asyncHandler(async (req, res) => {
-    try {
-        const product = await Product.findOne({ SKU: req.params.SKU, user: req.user.id });
-        if (!product) {
-            res.status(404).json({ message: 'Product not found' });
-            return;
-        }
-        res.status(200).json({ product });
-    } catch (error) {
-        res.status(400).json({ message: error.message });
-    }
-});
 
 const deleteProduct = asyncHandler(async (req, res) => {
     try {
@@ -188,6 +176,8 @@ const checkProductByName = asyncHandler(async (req, res) => {
       res.status(400).json({ message: error.message });
     }
 });
+
+
 
 const checkProductBySKU = asyncHandler(async (req, res) => {
     const { SKU } = req.params;
@@ -234,13 +224,26 @@ const searchProduct = asyncHandler(async (req, res) => {
     }
 });
 
+const getAllProductsWithoutPagination = asyncHandler(async (req, res) => {
+  const query = { user: req.user.id };  
+  
+  const products = await Product.find(query);
+
+  if (!products) {
+    res.status(404);
+    throw new Error('No products found');
+  }
+
+  res.json(products);
+});
+
 module.exports = {
     createProduct,
     getAllProduct,
     updateProduct,
-    getProduct,
     deleteProduct,
     checkProductByName,
     checkProductBySKU,
-    searchProduct
+    searchProduct,
+    getAllProductsWithoutPagination
 }
