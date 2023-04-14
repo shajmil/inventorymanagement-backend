@@ -5,11 +5,21 @@ const User = require('../models/userModel')
 
 const createAccount = asyncHandler(async (req, res) => {
     try {
-        const { name, accountNumber, balance, bankName, bankPhone, bankAddress } = req.body;
+        const { name, accountNumber, balance, bankName, bankPhone, bankAddress, isEnable } = req.body;
         const user = await User.findById(req.user.id)
         if (!user) {
             res.status(401)
             throw new Error('User not found')
+        }
+
+        const existingAccount = await Account.findOne({
+            accountNumber: { $regex: new RegExp(`^${accountNumber}$`, 'i') },
+            user: req.user.id
+        });
+
+        if (existingAccount) {
+            res.status(400).json({ message: 'A account with this number already exists for this user' });
+            return;
         }
 
         const newAccount = new Account({
@@ -20,6 +30,7 @@ const createAccount = asyncHandler(async (req, res) => {
             bankName,
             bankPhone,
             bankAddress,
+            isEnable
         });
         await newAccount.save();
 
@@ -44,9 +55,25 @@ const getTransactionsDetail = async (req, res) => {
     }
   };
 
+  const getAllAccounts = asyncHandler(async (req, res) => {
+    try {
+        const user = await User.findById(req.user.id)
+        if (!user) {
+            res.status(401)
+            throw new Error('User not found')
+        }
+        const accounts = await Account.find({ user: req.user.id });
+
+        res.status(200).json(accounts);
+    } catch (error) {
+        res.status(400);
+        throw new Error(error);
+    }
+});
 
 module.exports = {
     createAccount,
-    getTransactionsDetail
+    getTransactionsDetail,
+    getAllAccounts
     
 }

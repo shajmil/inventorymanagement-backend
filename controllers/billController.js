@@ -131,7 +131,7 @@ const markBillAsReceived = async (req, res) => {
 const addPayment = async (req, res) => {
   try {
     const { billId, payment, account } = req.body;
-    const { amount, method = 'Cash', date, description } = payment;
+    const { amount, method, date, description } = payment;
 
     const bill = await Bill.findById(billId);
     if (!bill) {
@@ -290,10 +290,54 @@ const updateBillByID = async (req, res) => {
 };
 
 
+const getAllBills = asyncHandler(async (req, res) => {
+  const {
+      vendor,
+      categoryName,
+      status,
+      sortBy,
+      sortOrder,
+      page,
+      limit
+  } = req.query;
 
+  const query = { user: req.user.id };
+  if (vendor) query.vendor = vendor;
+  if (categoryName) query.category = categoryName;
+  if (status) query.status = status;
 
+  const sort = {};
+  if (sortBy && sortOrder) sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
 
+  const options = {
+      page: parseInt(page, 10) || 1,
+      limit: parseInt(limit, 10) || 10,
+      sort
+  };
 
+  try {
+      const user = await User.findById(req.user.id)
+      if (!user) {
+          res.status(401)
+          throw new Error('User not found')
+      }
+
+      const bills = await Bill.find(query)
+          .skip((options.page - 1) * options.limit)
+          .limit(options.limit)
+          .sort(sort)
+          .populate('vendor')
+          .populate('category');
+
+      const count = await Bill.countDocuments(query);
+      const maxPage = Math.ceil(count / options.limit);
+      res.status(200).json({ bills, count, maxPage, isLastPage: options.page * options.limit >= count });
+
+  } catch (error) {
+      res.status(400)
+      throw new Error(error)
+  }
+});
 
 
 
@@ -303,5 +347,6 @@ module.exports = {
   markBillAsReceived,
   addPayment,
   getBillById,
-  updateBillByID
+  updateBillByID,
+  getAllBills
 }
