@@ -167,6 +167,8 @@ const addPayment = async (req, res) => {
       type: 'Expense',
       category: bill.category,
       amount: amount,
+      vendor:bill.vendor,
+      bill:bill._id,
       user: req.user.id,
     };
     accountDoc.transactions.push(transaction);
