@@ -44,6 +44,7 @@ const vendorSchema = mongoose.Schema({
           },
           billId: { type: mongoose.Schema.Types.ObjectId },
           amount: { type: Number },
+          remainingAmount: { type: Number },
         },
       ],
       paidAmount: { type: Number, default: 0 },
