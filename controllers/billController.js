@@ -77,11 +77,8 @@ const updateBill = async (req, res) => {
       return res.status(400).json({ message: 'Bill not found' });
     }
     const vendor = await Vendor.findById(findBill.vendor);
-    console.log('new Date(): ', new Date());
-    console.log('dueDate: ', findBill.dueDate);
 
     if (findBill.dueDate < new Date()) {
-      console.log('hello');
       vendor.overDueAmount += findBill.totalAmount;
     }
     await vendor.save();
@@ -117,7 +114,8 @@ const markBillAsReceived = async (req, res) => {
         dueDate: bill.dueDate,
         status: 'Received',
         billId: bill._id,
-        amount: bill.totalAmount
+        amount: bill.totalAmount,
+        remainingAmount:bill.remainingAmount
       });
       vendor.notPaidAmount += bill.totalAmount;
       await vendor.save();
@@ -196,6 +194,8 @@ const addPayment = async (req, res) => {
     if (billIndex < 0) {
       return res.status(400).json({ message: 'Bill not found in vendor' });
     }
+
+    vendor.bills[billIndex].remainingAmount -= amount
 
     if (bill.remainingAmount === 0) {
       vendor.bills[billIndex].status = 'Paid';
