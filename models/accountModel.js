@@ -62,6 +62,8 @@
         bankName: {
             type: String,
         },
+        credit: {type: Number, default: 0},
+        debit: {type: Number, default: 0},
         bankPhone: {
             type: String,
         },

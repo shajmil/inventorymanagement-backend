@@ -173,6 +173,7 @@ const addPayment = async (req, res) => {
     };
     accountDoc.transactions.push(transaction);
     accountDoc.balance -= amount;
+    accountDoc.debit += amount;
     await accountDoc.save();
 
     bill.payments.push({ amount, method, date, description });
