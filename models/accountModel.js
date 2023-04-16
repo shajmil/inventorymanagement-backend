@@ -26,6 +26,18 @@
         amount: {
             type: Number,
             required: true
+        },
+        vendor: {
+            type: String,
+        },
+        customer: {
+            type: String,
+        },
+        bill: {
+            type: String,
+        },
+        invoice: {
+            type: String,
         }
     });
 
