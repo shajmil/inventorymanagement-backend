@@ -25,10 +25,11 @@ const createProduct = asyncHandler(async (req, res) => {
             throw new Error('A product with this name already exists')
         }
 
-        const foundCategory = await Category.findOne({ name: { $regex: new RegExp(`^${category}$`, 'i') }, user: req.user.id }).exec();
+        const foundCategory = await Category.findById(category)
         if (!foundCategory) {
             return res.status(400).json({ message: 'Invalid category name' });
         }
+        
 
         const newProduct = new Product({
             name,
@@ -55,8 +56,52 @@ const createProduct = asyncHandler(async (req, res) => {
 
 
 const updateProduct = asyncHandler(async (req, res) => {
+  try {
     const { id } = req.params;
-    const productData = req.body;
+    const {
+      name,
+      SKU,
+      description,
+      salePrice,
+      purchasePrice,
+      quantity,
+      enabled,
+      enableBill,
+      category,
+    } = req.body;
+
+    const product = await Product.findById(id);
+    if (!product) {
+      return res.status(404).json({ message: 'Product not found' });
+    }
+
+    const foundCategory = await Category.findById(category)
+    if (!foundCategory) {
+        return res.status(400).json({ message: 'Invalid category name' });
+    }
+
+    product.name = name;
+    product.SKU = SKU;
+    product.description = description;
+    product.salePrice = salePrice;
+    product.purchasePrice = purchasePrice;
+    product.quantity = quantity;
+    product.enabled = enabled;
+    product.enableBill = enableBill;
+    product.categoryId = foundCategory._id,
+    product.categoryName = foundCategory.name,
+
+    await product.save();
+
+    res.status(200).json({ message: 'Product updated successfully', product });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Error updating product' });
+  }
+  });
+
+  const getProductByID = asyncHandler(async (req, res) => {
+    const { id } = req.params;
   
     try {
       const user = await User.findById(req.user.id);
@@ -66,10 +111,7 @@ const updateProduct = asyncHandler(async (req, res) => {
         throw new Error('User not found');
       }
   
-      const product = await Product.findByIdAndUpdate(id, productData, {
-        new: true,
-        runValidators: true
-      });
+      const product = await Product.findById(id)
   
       if (!product) {
         res.status(404);
@@ -245,5 +287,6 @@ module.exports = {
     checkProductByName,
     checkProductBySKU,
     searchProduct,
-    getAllProductsWithoutPagination
+    getAllProductsWithoutPagination,
+    getProductByID
 }

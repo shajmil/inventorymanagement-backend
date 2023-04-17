@@ -21,7 +21,6 @@ const productSchema = mongoose.Schema({
     },
     categoryName: {
         type:String,
-        required: true,
     },
 
     

@@ -1,7 +1,7 @@
 const express = require('express')
 
 const router = express.Router()
-const{createProduct, getAllProduct,searchProduct, updateProduct, deleteProduct,checkProductBySKU,checkProductByName,getAllProductsWithoutPagination } = require('../controllers/productController')
+const{getProductByID,createProduct, getAllProduct,searchProduct, updateProduct, deleteProduct,checkProductBySKU,checkProductByName,getAllProductsWithoutPagination } = require('../controllers/productController')
 
 const {protect} = require('../middleware/authMiddleware')
 
@@ -14,6 +14,8 @@ router.get('/search', protect, searchProduct);
 router.get('/checkProductByName/:name', protect,checkProductByName );
 router.get('/checkProductBySKU/:SKU', protect,checkProductBySKU );
 router.get('/getAll', protect,getAllProductsWithoutPagination );
+router.get('/:id', protect,getProductByID );
+
 
 // router.delete('/:id',protect, getCategory)
 
