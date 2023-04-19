@@ -36,20 +36,24 @@ const vendorSchema = mongoose.Schema({
     },
     bills: [
         {
-          billDate: { type: Date },
-          billNumber: { type: String },
-          dueDate: { type: Date },
-          status: {
-            type: String,
-          },
-          billId: { type: mongoose.Schema.Types.ObjectId },
-          amount: { type: Number },
-          remainingAmount: { type: Number },
+            billDate: { type: Date },
+            billNumber: { type: String },
+            dueDate: { type: Date },
+            status: {
+                type: String,
+            },
+            billId: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: 'Bill'
+            },
+
+            amount: { type: Number },
+            remainingAmount: { type: Number },
         },
-      ],
-      paidAmount: { type: Number, default: 0 },
-      notPaidAmount: { type: Number, default: 0 },
-      overDueAmount: { type: Number, default: 0 },
+    ],
+    paidAmount: { type: Number, default: 0 },
+    notPaidAmount: { type: Number, default: 0 },
+    overDueAmount: { type: Number, default: 0 },
 }, {
     timestamps: true,
 })
