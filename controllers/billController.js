@@ -194,6 +194,7 @@ const addPayment = async (req, res) => {
     }
 
     const billIndex = vendor.bills.findIndex(b => b.billId.toString() === billId);
+    console.log('billIndex: ', billIndex);
     if (billIndex < 0) {
       return res.status(400).json({ message: 'Bill not found in vendor' });
     }
@@ -208,7 +209,10 @@ const addPayment = async (req, res) => {
 
     vendor.paidAmount += amount;
     vendor.notPaidAmount -= amount;
-    vendor.overDueAmount -= amount;
+    if (bill.dueDate < new Date()) {
+      vendor.overDueAmount -= amount;
+    }
+   
 
     await vendor.save();
 
@@ -315,7 +319,7 @@ const editBill = async (req, res) => {
       return res.status(400).json({ message: "Vendor not found" });
     }
     const oldVendorId = bill.vendor._id
-    if (vendorId !== oldVendorId) {
+    if (vendorId != oldVendorId) {
       console.log(`Vendor changed from ${oldVendorId} to ${vendorId}`);
 
       const oldVendor = await Vendor.findById(oldVendorId);
@@ -323,12 +327,34 @@ const editBill = async (req, res) => {
         const oldBillIndex = oldVendor.bills.findIndex((b) => b.billId == billId);
         console.log('oldBillIndex: ', oldBillIndex);
         if (oldBillIndex !== -1) {
+          vendor.bills.push({
+            billDate: oldVendor.bills[oldBillIndex].billDate,
+            billNumber: oldVendor.bills[oldBillIndex].billNumber,
+            dueDate: oldVendor.bills[oldBillIndex].dueDate,
+            status: oldVendor.bills[oldBillIndex].status,
+            billId: oldVendor.bills[oldBillIndex].billId,
+            amount: oldVendor.bills[oldBillIndex].totalAmount,
+            remainingAmount:oldVendor.bills[oldBillIndex].remainingAmount
+          });
+          const amountToReduce = oldVendor.bills[oldBillIndex].amount - oldVendor.bills[oldBillIndex].remainingAmount
+          vendor.paidAmount += amountToReduce
+          vendor.notPaidAmount += oldVendor.bills[oldBillIndex].remainingAmount
+          if (bill.dueDate < new Date()) {
+            vendor.overDueAmount += oldVendor.bills[oldBillIndex].remainingAmount
+          }
+          await vendor.save();
+          oldVendor.paidAmount -= amountToReduce
+          oldVendor.notPaidAmount -= oldVendor.bills[oldBillIndex].remainingAmount
+          if (bill.dueDate < new Date()) {
+            oldVendor.overDueAmount -= oldVendor.bills[oldBillIndex].remainingAmount
+          }
           oldVendor.bills.splice(oldBillIndex, 1);
-          // await oldVendor.save();
+          await oldVendor.save();
           console.log(`Removed bill ${billId} from old vendor ${oldVendorId}`);
         }
       }
     }
+
     bill.vendor = vendor;
 
     // Store the original product quantities in a map
@@ -346,9 +372,42 @@ const editBill = async (req, res) => {
 
     const totalAmount = items.reduce((total, item) => total + item.total, 0);
     const totalTaxAmount = items.reduce((taxAmount, item) => taxAmount + item.taxAmount, 0);
-    bill.totalAmount = totalAmount;
+    const totalAmountTax = totalAmount + totalTaxAmount
+    bill.totalAmount = totalAmountTax;
     bill.totalTaxAmount = totalTaxAmount;
-    bill.remainingAmount = totalAmount - bill.paidAmount;
+    console.log('bill.paidAmount: ', bill.paidAmount);
+
+    const remaingNewAmount = totalAmountTax - bill.paidAmount;
+    bill.remainingAmount = remaingNewAmount
+
+    
+    await bill.save();
+    
+    console.log('vendor: ', vendor);
+
+    const newBillIndex = vendor.bills.findIndex((b) => b.billId == billId);
+    console.log('newBillIndex: ', newBillIndex);
+    if(newBillIndex !== -1){
+      if(vendor.bills[newBillIndex].amount > totalAmountTax){
+        const changeAmount = vendor.bills[newBillIndex].amount - totalAmountTax
+        vendor.notPaidAmount -= changeAmount
+        if (bill.dueDate < new Date()) {
+          vendor.overDueAmount -= changeAmount
+        }
+      }
+      else if(vendor.bills[newBillIndex].amount < totalAmountTax){
+        const changeAmount = totalAmountTax - vendor.bills[newBillIndex].amount
+        vendor.notPaidAmount += changeAmount
+        if (bill.dueDate < new Date()) {
+          vendor.overDueAmount += changeAmount
+        }
+      }
+      vendor.bills[newBillIndex].amount = totalAmountTax
+      vendor.bills[newBillIndex].remainingAmount = remaingNewAmount
+    }
+
+    await vendor.save();
+
 
     if (bill.status !== 'Draft') {
       const oldItemsMap = new Map(oldItemList.map(item => [item.product.toString(), item.quantity]));
@@ -386,45 +445,11 @@ const editBill = async (req, res) => {
           }
 
           productToUpdate.quantity = newProductQty;
-          // await productToUpdate.save();
+          await productToUpdate.save();
 
         }
       }
     }
-
-
-    // const billIndex = vendor.bills.findIndex((bill) => bill.billId === billId);
-    // if (billIndex !== -1) {
-    //   vendor.bills[billIndex] = {
-    //     billDate,
-    //     billNumber,
-    //     dueDate: bill.dueDate,
-    //     status: bill.status,
-    //     billId,
-    //     amount: totalAmount,
-    //   };
-    // }
-    // await vendor.save();
-
-    // if (bill.status !== 'Draft') {
-    //   // If the bill status is not Draft, adjust the product quantities accordingly
-    //   for (const item of bill.items) {
-    //     const product = await Product.findById(item.product);
-    //     if (!product) {
-    //       return res.status(400).json({ message: `Product not found for item with product ID ${item.product}` });
-    //     }
-    //     const originalQuantity = originalQuantities.get(item.product.toString());
-    //     const newQuantity = originalQuantity + item.quantity;
-    //     const quantityDifference = newQuantity - product.quantity;
-    //     product.quantity = newQuantity >= 0 ? newQuantity : 0;
-    //     await product.save();
-    //     if (quantityDifference !== 0) {
-    //       await Product.findByIdAndUpdate(item.product, { $inc: { quantity: quantityDifference } });
-    //     }
-    //   }
-    // }
-
-    // await bill.save();
 
     res.status(200).json({ message: "Bill updated successfully", bill });
   } catch (error) {
