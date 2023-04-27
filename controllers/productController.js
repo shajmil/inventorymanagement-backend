@@ -130,11 +130,11 @@ const getAllProduct = asyncHandler(async (req, res) => {
   const {
     name,
     SKU,
-    categoryName,
     sortBy,
     sortOrder,
     enabled,
     enableBill,
+    categoryId, // Add categoryId to the destructured query object
     page,
     limit
   } = req.query;
@@ -142,12 +142,21 @@ const getAllProduct = asyncHandler(async (req, res) => {
   const query = { user: req.user.id };
   if (name) query.name = { $regex: name, $options: 'i' };
   if (SKU) query.SKU = { $regex: SKU, $options: 'i' };
-  if (categoryName) query.categoryName = { $regex: categoryName, $options: 'i' };
   if (enabled) query.enabled = enabled;
-  if (enableBill) query.enableBill = enableBill
+  if (enableBill) query.enableBill = enableBill;
+
+  // Add categoryId check
+  if (categoryId) {
+    query.categoryId = categoryId;
+  }
 
   const sort = {};
-  if (sortBy && sortOrder) sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
+  if (sortBy && sortOrder) {
+    sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
+  } else {
+    sort.categoryId = 1; // sort by category ID in ascending order
+    sort.createdAt = -1; // sort by createdAt field in descending order
+  }
 
   const options = {
     page: parseInt(page, 10) || 1,
@@ -177,6 +186,7 @@ const getAllProduct = asyncHandler(async (req, res) => {
     throw new Error(error)
   }
 });
+
 
 
 const deleteProduct = asyncHandler(async (req, res) => {
