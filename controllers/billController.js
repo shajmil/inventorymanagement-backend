@@ -311,6 +311,7 @@ const editBill = async (req, res) => {
       billNumber,
       items,
       categoryId,
+      dueDate
     } = req.body;
 
     // Update vendor
@@ -369,7 +370,9 @@ const editBill = async (req, res) => {
     bill.items = items;
 
     bill.category = categoryId;
-
+    if(bill.dueDate){
+      bill.dueDate = dueDate;
+    }
     const totalAmount = items.reduce((total, item) => total + item.total, 0);
     const totalTaxAmount = items.reduce((taxAmount, item) => taxAmount + item.taxAmount, 0);
     const totalAmountTax = totalAmount + totalTaxAmount
