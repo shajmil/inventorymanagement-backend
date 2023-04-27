@@ -380,7 +380,15 @@ const editBill = async (req, res) => {
     const remaingNewAmount = totalAmountTax - bill.paidAmount;
     bill.remainingAmount = remaingNewAmount
 
-    
+    if(bill.status == 'Paid'){
+      if (remaingNewAmount === 0) {
+        bill.status = 'Paid';
+      }
+      else {
+        bill.status = 'Partial';
+      }
+    }
+
     await bill.save();
     
     console.log('vendor: ', vendor);
