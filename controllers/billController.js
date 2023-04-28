@@ -288,7 +288,10 @@ const getAllBills = asyncHandler(async (req, res) => {
 
     const count = await Bill.countDocuments(query);
     const maxPage = Math.ceil(count / options.limit);
-    res.status(200).json({ bills, count, maxPage, isLastPage: options.page * options.limit >= count });
+    const startCount = (options.page - 1) * options.limit + 1;
+    const endCount = Math.min(options.page * options.limit, count);
+    const message = `Showing ${startCount} to ${endCount} of ${count} Entries`;
+    res.status(200).json({ bills, count, maxPage, isLastPage: options.page * options.limit >= count, message });
 
   } catch (error) {
     res.status(400)
