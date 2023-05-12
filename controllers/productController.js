@@ -262,6 +262,7 @@ const searchProduct = asyncHandler(async (req, res) => {
 
   try {
     const products = await Product.find(query)
+      .populate('categoryId', 'name')
       .skip((options.page - 1) * options.limit)
       .limit(options.limit);
 
