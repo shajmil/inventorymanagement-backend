@@ -39,7 +39,7 @@ const createBill = async (req, res) => {
       billDate,
       billNumber,
       items,
-      totalAmount : totalAmountTax,
+      totalAmount: totalAmountTax,
       totalTaxAmount,
       category,
       remainingAmount: totalAmountTax,
@@ -63,9 +63,9 @@ const updateBill = async (req, res) => {
     const { billId } = req.params;
     const { dueDate } = req.body;
 
-  
 
-   
+
+
 
     const bill = await Bill.findByIdAndUpdate(billId, { dueDate }, { new: true });
     if (!bill) {
@@ -115,7 +115,7 @@ const markBillAsReceived = async (req, res) => {
         status: 'Received',
         billId: bill._id,
         amount: bill.totalAmount,
-        remainingAmount:bill.remainingAmount
+        remainingAmount: bill.remainingAmount
       });
       vendor.notPaidAmount += bill.totalAmount;
       await vendor.save();
@@ -167,8 +167,8 @@ const addPayment = async (req, res) => {
       type: 'Expense',
       category: bill.category,
       amount: amount,
-      vendor:bill.vendor,
-      bill:bill._id,
+      vendor: bill.vendor,
+      bill: bill._id,
       user: req.user.id,
     };
     accountDoc.transactions.push(transaction);
@@ -212,7 +212,7 @@ const addPayment = async (req, res) => {
     if (bill.dueDate < new Date()) {
       vendor.overDueAmount -= amount;
     }
-   
+
 
     await vendor.save();
 
@@ -244,7 +244,57 @@ const getBillById = async (req, res) => {
   }
 };
 
+const getTotalExpenseAmount = async (req, res) => {
+  try {
+    console.log('hello');
+    const userId = req.user.id;
+    const bills = await Bill.find({ user: userId });
+    let totalAmount = 0;
+    bills.forEach((bill) => {
+      totalAmount += bill.totalAmount;
+    });
+    res.json({ totalAmount });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Error getting total amount" });
+  }
+};
 
+const searchBill = asyncHandler(async (req, res) => {
+  const {
+    search,
+    page,
+    limit
+  } = req.query;
+
+  const query = { user: req.user.id };
+  if (search) query["$or"] = [
+    { billNumber: { $regex: search, $options: 'i' } }
+  ];
+
+  const options = {
+    page: parseInt(page, 10) || 1,
+    limit: parseInt(limit, 10) || 10
+  };
+
+  try {
+    const bills = await Bill.find(query)
+      .skip((options.page - 1) * options.limit)
+      .limit(options.limit)
+      .populate('vendor')
+      .populate('category');
+
+    const count = await Bill.countDocuments(query);
+    const maxPage = Math.ceil(count / options.limit);
+    const startCount = (options.page - 1) * options.limit + 1;
+    const endCount = Math.min(options.page * options.limit, count);
+    const message = `Showing ${startCount} to ${endCount} of ${count} Entries`;
+    res.status(200).json({ bills, count, maxPage, isLastPage: options.page * options.limit >= count, message });
+  } catch (error) {
+    res.status(400);
+    throw new Error(error);
+  }
+});
 
 
 const getAllBills = asyncHandler(async (req, res) => {
@@ -338,7 +388,7 @@ const editBill = async (req, res) => {
             status: oldVendor.bills[oldBillIndex].status,
             billId: oldVendor.bills[oldBillIndex].billId,
             amount: oldVendor.bills[oldBillIndex].totalAmount,
-            remainingAmount:oldVendor.bills[oldBillIndex].remainingAmount
+            remainingAmount: oldVendor.bills[oldBillIndex].remainingAmount
           });
           const amountToReduce = oldVendor.bills[oldBillIndex].amount - oldVendor.bills[oldBillIndex].remainingAmount
           vendor.paidAmount += amountToReduce
@@ -373,7 +423,7 @@ const editBill = async (req, res) => {
     bill.items = items;
 
     bill.category = categoryId;
-    if(bill.dueDate){
+    if (bill.dueDate) {
       bill.dueDate = dueDate;
     }
     const totalAmount = items.reduce((total, item) => total + item.total, 0);
@@ -386,7 +436,7 @@ const editBill = async (req, res) => {
     const remaingNewAmount = totalAmountTax - bill.paidAmount;
     bill.remainingAmount = remaingNewAmount
 
-    if(bill.status == 'Paid'){
+    if (bill.status == 'Paid') {
       if (remaingNewAmount === 0) {
         bill.status = 'Paid';
       }
@@ -396,20 +446,20 @@ const editBill = async (req, res) => {
     }
 
     await bill.save();
-    
+
     console.log('vendor: ', vendor);
 
     const newBillIndex = vendor.bills.findIndex((b) => b.billId == billId);
     console.log('newBillIndex: ', newBillIndex);
-    if(newBillIndex !== -1){
-      if(vendor.bills[newBillIndex].amount > totalAmountTax){
+    if (newBillIndex !== -1) {
+      if (vendor.bills[newBillIndex].amount > totalAmountTax) {
         const changeAmount = vendor.bills[newBillIndex].amount - totalAmountTax
         vendor.notPaidAmount -= changeAmount
         if (bill.dueDate < new Date()) {
           vendor.overDueAmount -= changeAmount
         }
       }
-      else if(vendor.bills[newBillIndex].amount < totalAmountTax){
+      else if (vendor.bills[newBillIndex].amount < totalAmountTax) {
         const changeAmount = totalAmountTax - vendor.bills[newBillIndex].amount
         vendor.notPaidAmount += changeAmount
         if (bill.dueDate < new Date()) {
@@ -483,5 +533,7 @@ module.exports = {
   addPayment,
   getBillById,
   getAllBills,
-  editBill
+  editBill,
+  getTotalExpenseAmount,
+  searchBill
 }
