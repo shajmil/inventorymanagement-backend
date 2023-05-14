@@ -290,6 +290,22 @@ const getAllProductsWithoutPagination = asyncHandler(async (req, res) => {
   res.json(products);
 });
 
+const getAllProductsWithQuantity = asyncHandler(async (req, res) => {
+  const query = { 
+    user: req.user.id,
+    quantity: { $gt: 0 }
+  };
+
+  const products = await Product.find(query);
+
+  if (!products) {
+    res.status(404);
+    throw new Error('No products found');
+  }
+
+  res.json(products);
+});
+
 module.exports = {
   createProduct,
   getAllProduct,
@@ -299,5 +315,6 @@ module.exports = {
   checkProductBySKU,
   searchProduct,
   getAllProductsWithoutPagination,
-  getProductByID
+  getProductByID,
+  getAllProductsWithQuantity
 }
