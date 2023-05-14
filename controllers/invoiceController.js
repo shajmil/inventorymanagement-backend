@@ -346,6 +346,16 @@ const getAllInvoices = asyncHandler(async (req, res) => {
     }
 });
 
+const getLastInvoiceNumber = asyncHandler(async (req, res) => {
+    const lastInvoice = await Invoice.findOne({ user: req.user.id })
+      .sort({ invoiceNumber: -1 })
+      .select('invoiceNumber -_id')
+      .limit(1);
+  
+    res.json({ lastInvoiceNumber: lastInvoice ? lastInvoice.invoiceNumber : 0 });
+  });
+  
+
 
 
 const editInvoice = async (req, res) => {
@@ -533,5 +543,6 @@ module.exports = {
     getTotalIncomeAmount,
     searchInvoice,
     getAllInvoices,
+    getLastInvoiceNumber,
     editInvoice
 }
