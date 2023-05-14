@@ -91,7 +91,6 @@ const updateBill = async (req, res) => {
 };
 
 // Mark bill as received and update product quantity
-// Mark bill as received and update product quantity
 const markBillAsReceived = async (req, res) => {
   try {
     const { billId } = req.params;
@@ -314,7 +313,11 @@ const getAllBills = asyncHandler(async (req, res) => {
   if (status) query.status = status;
 
   const sort = {};
-  if (sortBy && sortOrder) sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
+  if (sortBy && sortOrder) {
+    sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
+  } else {
+    sort.billDate = -1; // sort by category ID in ascending order
+  }
 
   const options = {
     page: parseInt(page, 10) || 1,

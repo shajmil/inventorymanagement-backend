@@ -21,6 +21,11 @@ app.use('/api/vendor', require('./routes/vendorRoutes'))
 app.use('/api/billCategory', require('./routes/billCategoryRoutes'))
 app.use('/api/bill', require('./routes/billRoutes'))
 app.use('/api/account', require('./routes/accountRoutes'))
+app.use('/api/customer', require('./routes/customerRoutes'))
+app.use('/api/invoiceCategory', require('./routes/invoiceCategoryRoutes'))
+app.use('/api/invoice', require('./routes/invoiceRoutes'))
+
+// app.use('/api/invoice', require('./routes/invoiceRoutes'))
 
 
 

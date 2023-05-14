@@ -21,8 +21,11 @@ const transactionSchema = new mongoose.Schema({
     },
     category: {
         type: mongoose.Schema.Types.ObjectId,
-        required: true,
         ref: 'BillCategory'
+    },
+    invoiceCategory: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'InvoiceCategory'
     },
     amount: {
         type: Number,
@@ -33,14 +36,16 @@ const transactionSchema = new mongoose.Schema({
         ref: 'Vendor'
     },
     customer: {
-        type: String,
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Customer'
     },
     bill: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Bill'
     },
     invoice: {
-        type: String,
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Invoice'
     }
 });
 
