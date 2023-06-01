@@ -48,6 +48,34 @@ const invoiceSchema = mongoose.Schema({
             },
         }
     ],
+    extra: [
+        {
+            name: {
+                type: String,
+                required: true
+            },
+            quantity: {
+                type: Number,
+                required: true
+            },
+            price: {
+                type: Number,
+                required: true
+            },
+            taxPercentage: {
+                type: Number,
+                required: true
+            },
+            total: {
+                type: Number,
+                required: true
+            },
+            taxAmount: {
+                type: Number,
+                required: true
+            },
+        }
+    ],
     totalAmount: {
         type: Number,
         required: true

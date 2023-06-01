@@ -14,6 +14,7 @@ const createInvoice = async (req, res) => {
             invoiceDate,
             invoiceNumber,
             items,
+            extra,
             categoryId,
         } = req.body;
         const user = await User.findById(req.user.id)
@@ -33,14 +34,19 @@ const createInvoice = async (req, res) => {
 
         const totalAmount = items.reduce((total, item) => total + item.total, 0);
         const totalTaxAmount = items.reduce((taxAmount, item) => taxAmount + item.taxAmount, 0);
-        const totalAmountTax = totalAmount + totalTaxAmount
+        const totalExtraAmount = extra.reduce((total, extra) => total + extra.total, 0);
+        const totalExtraTaxAmount = extra.reduce((taxAmount, extra) => taxAmount + extra.taxAmount, 0);
+        const totalAllAmount = totalAmount + totalExtraAmount
+        const totalAllTax = totalTaxAmount + totalExtraTaxAmount
+        const totalAmountTax = totalAllAmount + totalAllTax
         const invoice = new Invoice({
             customer,
             invoiceDate,
             invoiceNumber,
             items,
+            extra,
             totalAmount: totalAmountTax,
-            totalTaxAmount,
+            totalTaxAmount: totalAllTax,
             category,
             remainingAmount: totalAmountTax,
             paidAmount: 0,
@@ -348,13 +354,13 @@ const getAllInvoices = asyncHandler(async (req, res) => {
 
 const getLastInvoiceNumber = asyncHandler(async (req, res) => {
     const lastInvoice = await Invoice.findOne({ user: req.user.id })
-      .sort({ invoiceNumber: -1 })
-      .select('invoiceNumber -_id')
-      .limit(1);
-  
+        .sort({ invoiceNumber: -1 })
+        .select('invoiceNumber -_id')
+        .limit(1);
+
     res.json({ lastInvoiceNumber: lastInvoice ? lastInvoice.invoiceNumber : 0 });
-  });
-  
+});
+
 
 
 
@@ -372,6 +378,7 @@ const editInvoice = async (req, res) => {
             invoiceDate,
             invoiceNumber,
             items,
+            extra,
             categoryId,
             dueDate
         } = req.body;
@@ -419,7 +426,7 @@ const editInvoice = async (req, res) => {
         }
 
         invoice.customer = customer;
-
+        invoice.extra = extra
         // Store the original product quantities in a map
 
         const oldItemList = invoice.items
@@ -437,14 +444,16 @@ const editInvoice = async (req, res) => {
         }
         const totalAmount = items.reduce((total, item) => total + item.total, 0);
         const totalTaxAmount = items.reduce((taxAmount, item) => taxAmount + item.taxAmount, 0);
-        const totalAmountTax = totalAmount + totalTaxAmount
-        invoice.totalAmount = totalAmountTax;
-        invoice.totalTaxAmount = totalTaxAmount;
+        const totalExtraAmount = extra.reduce((total, extra) => total + extra.total, 0);
+        const totalExtraTaxAmount = extra.reduce((taxAmount, extra) => taxAmount + extra.taxAmount, 0);
+        const totalAllAmount = totalAmount + totalExtraAmount
+        const totalAllTax = totalTaxAmount + totalExtraTaxAmount
+        const totalAmountTax = totalAllAmount + totalAllTax
         console.log('invoice.paidAmount: ', invoice.paidAmount);
-
         const remaingNewAmount = totalAmountTax - invoice.paidAmount;
         invoice.remainingAmount = remaingNewAmount
-
+        invoice.totalTaxAmount = totalAllTax
+        invoice.totalAmount = totalAmountTax
         if (invoice.status == 'Paid') {
             if (remaingNewAmount === 0) {
                 invoice.status = 'Paid';
