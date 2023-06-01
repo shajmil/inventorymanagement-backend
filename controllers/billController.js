@@ -438,7 +438,8 @@ const editBill = async (req, res) => {
 
     const remaingNewAmount = totalAmountTax - bill.paidAmount;
     bill.remainingAmount = remaingNewAmount
-
+    bill.totalAmount = totalAmountTax
+    bill.totalTaxAmount = totalTaxAmount
     if (bill.status == 'Paid') {
       if (remaingNewAmount === 0) {
         bill.status = 'Paid';
